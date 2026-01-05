@@ -14,22 +14,23 @@ class RolesTableSeeder extends Seeder
      */
     public function run(): void
     {
-          DB::table('roles')->insert([
-            [
-                'name' => 'Super Admin',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Manager',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Staff',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-        ]);
+        $now = Carbon::now();
+
+        $roles = [
+            ['name' => 'Super Admin'],
+            ['name' => 'Manager'],
+            ['name' => 'Staff'],
+        ];
+
+        foreach ($roles as &$role) {
+            $role['created_at'] = $now;
+            $role['updated_at'] = $now;
+        }
+
+        DB::table('roles')->upsert(
+            $roles,
+            ['name'],          // unique key
+            ['updated_at']     // update if exists
+        );
     }
 }

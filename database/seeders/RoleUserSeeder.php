@@ -13,10 +13,10 @@ class RoleUserSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('role_user')->insert([
+        DB::table('role_user')->insertOrIgnore([
             [
                 'role_id' => 1, // Super Admin
-                'user_id' => 1, // Assuming the first user is Super Admin
+                'user_id' => 1, // First user
             ],
         ]);
     }

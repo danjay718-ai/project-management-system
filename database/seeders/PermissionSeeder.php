@@ -13,45 +13,18 @@ class PermissionSeeder extends Seeder
         $now = Carbon::now();
 
         $permissions = [
-            // Dashboard
-            [
-                'name' => 'dashboard.access',
+            ['name' => 'dashboard.access'],
 
-            ],
+            ['name' => 'users.view'],
+            ['name' => 'users.create'],
+            ['name' => 'users.update'],
+            ['name' => 'users.delete'],
+            ['name' => 'users.assign_role'],
 
-            // User management
-            [
-                'name' => 'users.view',
+            ['name' => 'reports.view'],
+            ['name' => 'reports.generate'],
 
-            ],
-            [
-                'name' => 'users.create',
-
-            ],
-            [
-                'name' => 'users.update',
-
-            ],
-            [
-                'name' => 'users.delete',
-
-            ],
-            [
-                'name' => 'users.assign_role',
-            ],
-
-            // Reports
-            [
-                'name' => 'reports.view',
-            ],
-            [
-                'name' => 'reports.generate',
-            ],
-
-            // System settings
-            [
-                'name' => 'settings.manage',
-            ],
+            ['name' => 'settings.manage'],
         ];
 
         foreach ($permissions as &$permission) {
@@ -59,6 +32,10 @@ class PermissionSeeder extends Seeder
             $permission['updated_at'] = $now;
         }
 
-        DB::table('permissions')->insert($permissions);
+        DB::table('permissions')->upsert(
+            $permissions,
+            ['name'],              // unique key
+            ['updated_at']         // columns to update if exists
+        );
     }
 }
