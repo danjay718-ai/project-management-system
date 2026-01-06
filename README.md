@@ -1,59 +1,275 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ProcureFlow
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Internal Procurement & Operations Approval System
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Table of Contents
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. Overview
+2. Problem Statement
+3. Solution Overview
+4. System Scope & Target Users
+5. High-Level Architecture
+6. Tech Stack & Laravel Concepts
+7. Module Breakdown
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+   * Module 1: Role-Based Access Control (RBAC)
+   * Module 2: Purchase Request Management (Planned)
+   * Module 3: Approval Policies & Workflows (Planned)
+   * Module 4: Audit Logs & Activity Tracking (Planned)
+   * Module 5: Reports & Insights (Planned)
+8. Design Principles
+9. System Limitations & Future Enhancements
+10. Why This System Exists (Portfolio Context)
+11. Current Status & Roadmap
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 1. Overview
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**ProcureFlow** is a medium-sized internal system designed to manage purchase requests, approval workflows, and access control within an organization. It is built incrementally using modular design principles, starting from a strong authorization foundation and expanding into real business domains.
 
-## Laravel Sponsors
+The system mirrors how real-world internal tools are developed: foundational infrastructure first, followed by business-specific modules that consume and rely on that foundation.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 2. Problem Statement
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Many organizations still rely on:
 
-## Contributing
+* Email or chat-based purchase approvals
+* Spreadsheets for tracking requests
+* Manual access control
+* No audit trail or accountability
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+This leads to:
 
-## Code of Conduct
+* Poor visibility of request status
+* Unclear approval responsibility
+* Security risks due to improper access
+* Difficulty scaling internal processes
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 3. Solution Overview
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+ProcureFlow provides:
 
-## License
+* Centralized role-based access control
+* Structured purchase request workflows
+* Policy-based authorization enforcement
+* Auditability and traceability
+* A scalable modular architecture
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The system is intentionally designed to grow over time, with each module introducing new concepts without rewriting existing logic.
+
+---
+
+## 4. System Scope & Target Users
+
+### Target Users
+
+* **Staff** – creates and tracks purchase requests
+* **Managers** – reviews and approves requests
+* **Super Admins** – manages system configuration, users, and oversight
+
+### Out of Scope (for now)
+
+* External vendors
+* Payment processing
+* Accounting system integration
+
+---
+
+## 5. High-Level Architecture
+
+The system follows a modular, domain-driven structure:
+
+* A **core RBAC module** provides authorization primitives
+* Business modules (e.g., Purchase Requests) consume RBAC
+* Cross-cutting concerns (logs, reports) observe system behavior
+
+Each module is isolated by responsibility but integrated through shared contracts (models, policies, permissions).
+
+---
+
+## 6. Tech Stack & Laravel Concepts
+
+### Tech Stack
+
+* **Backend:** Laravel 10 (PHP)
+* **Database:** MySQL / MariaDB
+* **Frontend:** Blade Templates / optional Vue.js for interactive components
+* **Version Control:** Git / GitHub
+
+### Laravel Concepts Used
+
+* Eloquent ORM for models and relationships
+* Many-to-many relationships via pivot tables
+* Seeders for default data population
+* Policies for domain-level authorization
+* Helper methods (e.g., hasPermission) for authorization logic
+* Model observers/events for future audit logging
+* Modular design with service classes and organized namespaces
+
+---
+
+## 7. Module Breakdown
+
+### 🟩 Module 1: Role-Based Access Control (RBAC)
+
+**Status:** Completed (Foundation Module)
+
+#### Purpose
+
+Provides a reusable authorization foundation for the entire system.
+
+#### Concepts Implemented
+
+* Users, Roles, Permissions data models
+* Many-to-many relationships via pivot tables
+* Seeders for default roles and permissions
+* Authorization helper methods (e.g., permission checks)
+
+#### What This Module Does
+
+* Defines *who* can do *what* at a system level
+* Enables consistent authorization checks across all modules
+
+#### What This Module Does NOT Do
+
+* Contains no business logic
+* Has no knowledge of purchase requests or approvals
+
+---
+
+### 🟦 Module 2: Purchase Request Management (Planned)
+
+#### Purpose
+
+Introduces the first real business domain that consumes RBAC.
+
+#### Responsibilities
+
+* Creation and tracking of purchase requests
+* Ownership rules (who created what)
+* Request lifecycle management (e.g., pending, approved, rejected)
+
+#### Concepts to be Implemented
+
+* Domain models
+* Ownership-based access rules
+* State-driven logic
+
+---
+
+### 🟨 Module 3: Approval Policies & Workflows (Planned)
+
+#### Purpose
+
+Enforces business rules on top of RBAC permissions.
+
+#### Responsibilities
+
+* Approval and rejection logic
+* Role-aware and context-aware authorization
+
+#### Concepts to be Implemented
+
+* Laravel Policies
+* Action-level authorization
+* Separation of permissions vs business constraints
+
+---
+
+### 🟧 Module 4: Audit Logs & Activity Tracking (Planned)
+
+#### Purpose
+
+Ensures accountability and traceability.
+
+#### Responsibilities
+
+* Record critical system actions
+* Provide immutable history for reviews and reports
+
+#### Concepts to be Implemented
+
+* Model observers or events
+* Read-only access patterns
+
+---
+
+### 🟪 Module 5: Reports & Insights (Planned)
+
+#### Purpose
+
+Provides management-level visibility into system usage.
+
+#### Responsibilities
+
+* Aggregated views of requests and approvals
+* Read-heavy operations
+
+#### Concepts to be Implemented
+
+* Query optimization
+* Indexing considerations
+* Permission-based reporting access
+
+---
+
+## 8. Design Principles
+
+* **Separation of concerns** – each module has a single responsibility
+* **Data-driven authorization** – roles and permissions drive behavior
+* **Policy-based enforcement** – business rules are centralized
+* **Incremental complexity** – features are added without refactoring foundations
+
+---
+
+## 9. System Limitations & Future Enhancements
+
+### Limitations
+
+* Notifications module not yet implemented
+* Reports are read-heavy but do not support real-time analytics yet
+* No external system integration (accounting, vendors)
+* Frontend interactivity is minimal (mostly Blade templates)
+
+### Future Enhancements
+
+* Add notifications (email, in-app) for approvals and rejections
+* Advanced reporting with charts and downloadable exports
+* Multi-tenancy support for SaaS deployment
+* API endpoints for integration with external systems
+* Frontend SPA for improved UX (Vue.js / React)
+
+---
+
+## 10. Why This System Exists (Portfolio Context)
+
+ProcureFlow is intentionally designed as a single evolving system rather than multiple isolated demo projects. This demonstrates:
+
+* Real-world system design thinking
+* Proper use of Laravel authorization features
+* Ability to scale features without rewriting core logic
+* Understanding of how business domains consume infrastructure modules
+
+---
+
+## 11. Current Status & Roadmap
+
+### Completed
+
+* Module 1: Role-Based Access Control (RBAC)
+
+### In Progress / Planned
+
+* Module 2: Purchase Request Management
+* Module 3: Approval Policies
+* Module 4: Audit Logs
+* Module 5: Reports & Insights
+
+The system will continue to evolve module by module, mirroring real production development practices.
