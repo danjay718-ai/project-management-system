@@ -16,46 +16,49 @@ class PermissionRoleSeeder extends Seeder
 
     public function run(): void
     {
-        // SUPER ADMIN → ALL PERMISSIONS
-        $adminRole = Role::where('name', 'Super Admin')->first();
+        $roles = DB::table('roles')
+            ->whereIn('name', ['Super Admin', 'Manager', 'Staff'])
+            ->pluck('id', 'name');
 
-        if ($adminRole) {
-            $adminPermissionIds = DB::table('permissions')->pluck('id')->toArray();
+        $adminPermissions = DB::table('permissions')->pluck('id');
 
-            $adminRole->permissions()->syncWithoutDetaching($adminPermissionIds);
-        }
+        $managerPermissions = DB::table('permissions')
+            ->whereIn('name', [
+                'dashboard.access',
+                'users.view',
+                'users.update',
+                'reports.view',
+                'reports.generate',
+            ])
+            ->pluck('id');
 
-        // MANAGER → LIMITED PERMISSIONS
-        $managerRole = Role::where('name', 'Manager')->first();
+        $staffPermissions = DB::table('permissions')
+            ->whereIn('name', [
+                'dashboard.access',
+                'reports.view',
+            ])
+            ->pluck('id');
 
-        if ($managerRole) {
-            $managerPermissionIds = DB::table('permissions')
-                ->whereIn('name', [
-                    'dashboard.access',
-                    'users.view',
-                    'users.update',
-                    'reports.view',
-                    'reports.generate',
-                ])
-                ->pluck('id')
-                ->toArray();
+        DB::table('permission_role')->insertOrIgnore(
+            $adminPermissions->map(fn ($id) => [
+                'role_id' => $roles['Super Admin'],
+                'permission_id' => $id,
+            ])->toArray()
+        );
 
-            $managerRole->permissions()->syncWithoutDetaching($managerPermissionIds);
-        }
+        DB::table('permission_role')->insertOrIgnore(
+            $managerPermissions->map(fn ($id) => [
+                'role_id' => $roles['Manager'],
+                'permission_id' => $id,
+            ])->toArray()
+        );
 
-        // STAFF → MINIMAL PERMISSIONS
-        $staffRole = Role::where('name', 'Staff')->first();
-
-        if ($staffRole) {
-            $staffPermissionIds = DB::table('permissions')
-                ->whereIn('name', [
-                    'dashboard.access',
-                    'reports.view',
-                ])
-                ->pluck('id')
-                ->toArray();
-
-            $staffRole->permissions()->syncWithoutDetaching($staffPermissionIds);
-        }
+        DB::table('permission_role')->insertOrIgnore(
+            $staffPermissions->map(fn ($id) => [
+                'role_id' => $roles['Staff'],
+                'permission_id' => $id,
+            ])->toArray()
+        );
     }
+
 }

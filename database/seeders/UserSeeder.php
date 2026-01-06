@@ -6,6 +6,8 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Role;
 
 class UserSeeder extends Seeder
 {
@@ -14,13 +16,32 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = User::first();
+        $users = [
+            [
+                'name' => 'Admin User',
+                'email' => 'admin@example.com',
+                'password' => 'password123',
+            ],
+            [
+                'name' => 'Editor User',
+                'email' => 'editor@example.com',
+                'password' => 'password123',
+            ],
+            [
+                'name' => 'Regular User',
+                'email' => 'user@example.com',
+                'password' => 'password123',
+            ],
+        ];
 
-        $adminRole = \App\Models\Role::where('name', 'Super Admin')->first();
-
-        if ($user && $adminRole) {
-            $user->roles()->syncWithoutDetaching($adminRole);
+        foreach ($users as $user) {
+            User::updateOrCreate(
+                ['email' => $user['email']], // unique key
+                [
+                    'name' => $user['name'],
+                    'password' => Hash::make($user['password']),
+                ]
+            );
         }
-
     }
 }
