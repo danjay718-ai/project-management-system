@@ -6,7 +6,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -51,9 +50,19 @@ class User extends Authenticatable
      * A user may belong to many roles
      *
      */
-    public function roles(): HasMany
+    public function roles()
     {
         return $this->belongsToMany(Role::class);
+    }
+    
+    /**
+     * Check if user has specific role
+     *
+     *  @return bool true or false
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles->contains('name', $roleName);
     }
 
      /**

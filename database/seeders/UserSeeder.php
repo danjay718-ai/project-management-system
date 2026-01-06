@@ -18,18 +18,18 @@ class UserSeeder extends Seeder
     {
         $users = [
             [
-                'name' => 'Admin User',
-                'email' => 'admin@example.com',
+                'name' => 'Super Admin',
+                'email' => 'super.admin@example.com',
                 'password' => 'password123',
             ],
             [
-                'name' => 'Editor User',
-                'email' => 'editor@example.com',
+                'name' => 'Manager',
+                'email' => 'manager@example.com',
                 'password' => 'password123',
             ],
             [
-                'name' => 'Regular User',
-                'email' => 'user@example.com',
+                'name' => 'Staff',
+                'email' => 'staff@example.com',
                 'password' => 'password123',
             ],
         ];
