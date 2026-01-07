@@ -10,42 +10,53 @@ use Illuminate\Support\Facades\DB;
 
 class PermissionRoleSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-
     public function run(): void
     {
         $roles = DB::table('roles')
-            ->whereIn('name', ['Super Admin', 'Manager', 'Staff'])
+            ->whereIn('name', ['Admin', 'Manager', 'Member'])
             ->pluck('id', 'name');
 
-        $adminPermissions = DB::table('permissions')->pluck('id');
+        $allPermissions = DB::table('permissions')->pluck('id');
 
         $managerPermissions = DB::table('permissions')
             ->whereIn('name', [
                 'dashboard.access',
-                'users.view',
-                'users.update',
+
+                'projects.view',
+                'projects.create',
+                'projects.update',
+
+                'tasks.view',
+                'tasks.create',
+                'tasks.assign',
+                'tasks.close',
+
                 'reports.view',
                 'reports.generate',
             ])
             ->pluck('id');
 
-        $staffPermissions = DB::table('permissions')
+        $memberPermissions = DB::table('permissions')
             ->whereIn('name', [
                 'dashboard.access',
-                'reports.view',
+
+                'projects.view',
+
+                'tasks.view',
+                'tasks.update',
+                'tasks.change_status',
             ])
             ->pluck('id');
 
+        // Admin → ALL permissions
         DB::table('permission_role')->insertOrIgnore(
-            $adminPermissions->map(fn ($id) => [
-                'role_id' => $roles['Super Admin'],
+            $allPermissions->map(fn ($id) => [
+                'role_id' => $roles['Admin'],
                 'permission_id' => $id,
             ])->toArray()
         );
 
+        // Manager
         DB::table('permission_role')->insertOrIgnore(
             $managerPermissions->map(fn ($id) => [
                 'role_id' => $roles['Manager'],
@@ -53,12 +64,12 @@ class PermissionRoleSeeder extends Seeder
             ])->toArray()
         );
 
+        // Member
         DB::table('permission_role')->insertOrIgnore(
-            $staffPermissions->map(fn ($id) => [
-                'role_id' => $roles['Staff'],
+            $memberPermissions->map(fn ($id) => [
+                'role_id' => $roles['Member'],
                 'permission_id' => $id,
             ])->toArray()
         );
     }
-
 }

@@ -9,17 +9,14 @@ use Carbon\Carbon;
 
 class RolesTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $now = Carbon::now();
 
         $roles = [
-            ['name' => 'Super Admin'],
+            ['name' => 'Admin'],
             ['name' => 'Manager'],
-            ['name' => 'Staff'],
+            ['name' => 'Member'],
         ];
 
         foreach ($roles as &$role) {
@@ -29,8 +26,8 @@ class RolesTableSeeder extends Seeder
 
         DB::table('roles')->upsert(
             $roles,
-            ['name'],          // unique key
-            ['updated_at']     // update if exists
+            ['name'],
+            ['updated_at']
         );
     }
 }

@@ -11,32 +11,29 @@ use App\Models\Role;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $users = [
             [
-                'name' => 'Super Admin',
-                'email' => 'super.admin@example.com',
+                'name' => 'Admin User',
+                'email' => 'admin@example.com',
                 'password' => 'password123',
             ],
             [
-                'name' => 'Manager',
+                'name' => 'Manager User',
                 'email' => 'manager@example.com',
                 'password' => 'password123',
             ],
             [
-                'name' => 'Staff',
-                'email' => 'staff@example.com',
+                'name' => 'Member User',
+                'email' => 'member@example.com',
                 'password' => 'password123',
             ],
         ];
 
         foreach ($users as $user) {
             User::updateOrCreate(
-                ['email' => $user['email']], // unique key
+                ['email' => $user['email']],
                 [
                     'name' => $user['name'],
                     'password' => Hash::make($user['password']),
@@ -45,3 +42,4 @@ class UserSeeder extends Seeder
         }
     }
 }
+
