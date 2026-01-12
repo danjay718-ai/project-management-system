@@ -21,7 +21,14 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        return false;
+
+        // Admin can view any project
+        if ($user->hasRole('Admin')) {
+            return true;
+        }
+
+       // 2. Otherwise, user must be part of the project
+        return $project->users->contains($user->id);
     }
 
     /**
