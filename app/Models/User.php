@@ -54,7 +54,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class);
     }
-    
+
     /**
      * Check if user has specific role
      *
@@ -80,5 +80,15 @@ class User extends Authenticatable
 
         return false;
     }
+
+    /**
+     * A user may belong to many projects
+     *
+     */
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_user');
+    }
+
 
 }
