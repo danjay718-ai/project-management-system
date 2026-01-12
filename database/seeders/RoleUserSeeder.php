@@ -18,7 +18,7 @@ class RoleUserSeeder extends Seeder
         $roleUserMap = [
             'Super Admin'  => ['super.admin@example.com'],
             'Manager' => ['manager@example.com'],
-            'Staff'   => ['staff@example.com'],
+            'Member'   => ['member@example.com'],
         ];
 
         foreach ($roleUserMap as $roleName => $emails) {
