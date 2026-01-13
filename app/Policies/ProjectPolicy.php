@@ -13,7 +13,18 @@ class ProjectPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        // Admin can see all
+        if ($user->hasRole('Admin')) {
+            return true;
+        }
+
+        // Manager can see all
+        if ($user->hasRole('Manager')) {
+            return true;
+        }
+
+        // Members → can see their assigned projects
+        return $user->projects()->exists();
     }
 
     /**
@@ -36,7 +47,8 @@ class ProjectPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        // Only Admin and Manager can create projects
+        return $user->hasRole('Admin') || $user->hasRole('Manager');
     }
 
     /**
@@ -44,7 +56,13 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        return false;
+        // 1. Admin can update any project
+        if ($user->hasRole('Admin')) {
+            return true;
+        }
+
+        // 2. Manager can update if they are the owner
+        return $project->owner_id === $user->id;
     }
 
     /**
@@ -52,7 +70,8 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        return false;
+        // Only Admin can delete projects
+        return $user->hasRole('Admin');
     }
 
     /**
