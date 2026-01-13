@@ -20,22 +20,33 @@ class TaskSeeder extends Seeder
             return;
         }
 
-        Task::create([
-            'project_id' => $project->id,
-            'title' => 'Design database schema',
-            'description' => 'Create project and task migrations',
-            'status' => 'pending',
-            'assigned_to' => $member->id,
-            'created_by' => $manager->id,
-        ]);
+        $tasks = [
+            [
+                'title' => 'Design database schema',
+                'description' => 'Create project and task migrations',
+                'status' => 'pending',
+            ],
+            [
+                'title' => 'Implement RBAC policies',
+                'description' => 'Task and project authorization',
+                'status' => 'in_progress',
+            ],
+        ];
 
-        Task::create([
-            'project_id' => $project->id,
-            'title' => 'Implement RBAC policies',
-            'description' => 'Task and project authorization',
-            'status' => 'in_progress',
-            'assigned_to' => $member->id,
-            'created_by' => $manager->id,
-        ]);
+        foreach ($tasks as $task) {
+            Task::updateOrCreate(
+                [
+                    'project_id' => $project->id,
+                    'title' => $task['title'], // unique per project
+                ],
+                [
+                    'description' => $task['description'],
+                    'status'       => $task['status'],
+                    'assigned_to'  => $member->id,
+                    'created_by'   => $manager->id,
+                ]
+            );
+        }
     }
+
 }

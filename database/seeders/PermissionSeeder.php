@@ -10,51 +10,48 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        $now = Carbon::now();
-
         $permissions = [
-            // Dashboard
-            ['name' => 'dashboard.access'],
+            'dashboard.access',
 
-            // Users
-            ['name' => 'users.view'],
-            ['name' => 'users.create'],
-            ['name' => 'users.update'],
-            ['name' => 'users.delete'],
-            ['name' => 'users.assign_role'],
+            'users.view',
+            'users.create',
+            'users.update',
+            'users.delete',
+            'users.assign_role',
 
-            // Reports
-            ['name' => 'reports.view'],
-            ['name' => 'reports.generate'],
+            'reports.view',
+            'reports.generate',
 
-            // Settings
-            ['name' => 'settings.manage'],
+            'settings.manage',
 
-            // Projects
-            ['name' => 'projects.view'],
-            ['name' => 'projects.create'],
-            ['name' => 'projects.update'],
-            ['name' => 'projects.archive'],
+            'projects.view',
+            'projects.create',
+            'projects.update',
+            'projects.archive',
 
-            // Tasks
-            ['name' => 'tasks.view'],
-            ['name' => 'tasks.create'],
-            ['name' => 'tasks.update'],
-            ['name' => 'tasks.assign'],
-            ['name' => 'tasks.change_status'],
-            ['name' => 'tasks.close'],
+            'tasks.view',
+            'tasks.create',
+            'tasks.update',
+            'tasks.assign',
+            'tasks.change_status',
+            'tasks.close',
         ];
 
-        foreach ($permissions as &$permission) {
-            $permission['created_at'] = $now;
-            $permission['updated_at'] = $now;
-        }
+        $now = now();
 
-        DB::table('permissions')->upsert(
-            $permissions,
-            ['name'],
-            ['updated_at']
-        );
+        foreach ($permissions as $name) {
+            $exists = DB::table('permissions')
+                ->where('name', $name)
+                ->exists();
+
+            if (! $exists) {
+                DB::table('permissions')->insert([
+                    'name'       => $name,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
+        }
     }
 }
 
