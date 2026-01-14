@@ -19,4 +19,14 @@ class Task extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }
