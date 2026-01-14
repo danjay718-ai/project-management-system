@@ -17,21 +17,36 @@ class ProjectUserSeeder extends Seeder
         // Fetch all projects
         $projects = Project::all();
 
-        // Fetch users that can be members (exclude Admin optional)
+        // Fetch users that can be members (exclude Admin)
         $users = User::whereHas('roles', function ($q) {
             $q->whereIn('name', ['Manager', 'Member']);
         })->get();
 
         foreach ($projects as $project) {
 
-            // Attach owner automatically as member (very realistic)
+            // 1. Attach owner automatically (if exists)
             if ($project->owner_id) {
                 $project->users()->syncWithoutDetaching([$project->owner_id]);
             }
 
-            // Random members (1–3 users)
-            $memberIds = $users->random(rand(1, 3))->pluck('id')->toArray();
+            // 2. Remove owner from random candidates (avoid duplicates)
+            $eligibleUsers = $users->where('id', '!=', $project->owner_id);
 
+            // 3. Guard: no eligible users
+            if ($eligibleUsers->isEmpty()) {
+                continue;
+            }
+
+            // 4. Safe random count (never exceeds available users)
+            $memberCount = rand(1, min(3, $eligibleUsers->count()));
+
+            // 5. Pick random members safely
+            $memberIds = $eligibleUsers
+                ->random($memberCount)
+                ->pluck('id')
+                ->toArray();
+
+            // 6. Attach members without removing existing ones
             $project->users()->syncWithoutDetaching($memberIds);
         }
     }
