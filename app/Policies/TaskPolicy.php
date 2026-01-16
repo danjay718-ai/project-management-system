@@ -64,23 +64,10 @@ class TaskPolicy
             return true;
         }
         // 3. Otherwise, only the assignee can update the task
-        return $task->assigned_to === $user->id;
+        return $task->assigned_to === $user->id || $task->created_by === $user->id;
     }
 
-    /**
-     * Determine whether the user can update the status of the model.
-     */
-    public function updateStatus(User $user, Task $task): bool
-    {
-        // Admins and Managers can update task status
-        if ($user->hasRole('Admin') || $user->hasRole('Manager')) {
-            return true;
-        }
-        // Otherwise, only the assignee can update the status
-        return $task->assigned_to === $user->id;
-    }
-
-
+ 
     /**
      * Determine whether the user can delete the model.
      */
