@@ -83,6 +83,10 @@ class User extends Authenticatable
      */
     public function hasPermission(string $permissionName): bool
     {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles.permissions'); // eager load permissions through roles
+        }
+        
         foreach ($this->roles as $role) {
             if ($role->permissions->contains('name', $permissionName)) {
                 return true;
