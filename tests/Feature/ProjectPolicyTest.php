@@ -22,10 +22,6 @@ it('prevents non-admin from deleting a project', function () {
 it('allows admin to delete any project', function () {
     $admin = User::factory()->admin()->create();
 
-    // Best practice: ensure roles are loaded
-    // This prevents false negatives due to caching in relationships
-    $admin->load('roles');
-
     $project = Project::factory()->create();
 
     expect($admin->can('delete', $project))->toBeTrue();
