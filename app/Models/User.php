@@ -56,16 +56,23 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user has specific role
+     * Check if user has a specific role
      *
-     *  @return bool true or false
+     * Best practice:
+     * - Automatically load roles if not already loaded.
+     * - Avoids false negatives in tests or policy checks.
      */
     public function hasRole(string $roleName): bool
     {
-        //original content
+        //v1 original content
         // return $this->roles->contains('name', $roleName);
 
-        // 
+         // Lazy-load roles only if not loaded
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
+        //v1.1 updated content to optimize query
         return $this->roles()->where('name', $roleName)->exists();
     }
 
