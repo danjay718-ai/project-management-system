@@ -27,5 +27,20 @@ it('allows admin to delete any project', function () {
     expect($admin->can('delete', $project))->toBeTrue();
 });
 
+it('prevents non-owner from updating a project', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
 
+    $result = $user->can('update', $project);
 
+    expect($result)->toBeFalse();
+});
+
+it('allows owner to update their project', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create(['owner_id' => $user->id]);
+
+    $result = $user->can('update', $project);
+
+    expect($result)->toBeTrue();
+});
