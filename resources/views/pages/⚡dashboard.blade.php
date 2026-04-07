@@ -3,22 +3,36 @@
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use App\Models\User;
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\Project;
 
 new #[Layout('layouts.app')] #[Title('Admin Dashboard')] class extends Component
 {
-    public $stats = [
-        ['title' => 'Total Users', 'value' => '1,429', 'increase' => '+12%', 'trend' => 'up', 'icon' => 'user-group'],
-        ['title' => 'Active Roles', 'value' => '8', 'increase' => 'No change', 'trend' => 'neutral', 'icon' => 'shield-check'],
-        ['title' => 'Permissions', 'value' => '42', 'increase' => '+3', 'trend' => 'up', 'icon' => 'key'],
-        ['title' => 'Active Projects', 'value' => '12', 'increase' => '-5%', 'trend' => 'down', 'icon' => 'briefcase'],
-    ];
+    public array $stats = [];
+    public array $recentActivities = [];
 
-    public $recentActivities = [
-        ['user' => 'Sarah Connor', 'email' => 'sarah@example.com', 'action' => 'Assigned Role', 'target' => 'Admin', 'time' => '2 mins ago', 'status' => 'Success'],
-        ['user' => 'John Doe', 'email' => 'john@example.com', 'action' => 'Updated Policy', 'target' => 'User Management', 'time' => '1 hour ago', 'status' => 'Pending'],
-        ['user' => 'Jane Smith', 'email' => 'jane@example.com', 'action' => 'Created Project', 'target' => 'Alpha Phase', 'time' => '3 hours ago', 'status' => 'Success'],
-        ['user' => 'Mike Ross', 'email' => 'mike@example.com', 'action' => 'Revoked Access', 'target' => 'Beta API', 'time' => '5 hours ago', 'status' => 'Failed'],
-    ];
+    public function mount()
+    {
+        $this->stats = [
+            ['title' => 'Total Users', 'value' => User::count(), 'increase' => 'Active', 'trend' => 'neutral', 'icon' => 'user-group'],
+            ['title' => 'Active Roles', 'value' => Role::count(), 'increase' => 'Defined', 'trend' => 'neutral', 'icon' => 'shield-check'],
+            ['title' => 'Permissions', 'value' => Permission::count(), 'increase' => 'System', 'trend' => 'neutral', 'icon' => 'key'],
+            ['title' => 'Active Projects', 'value' => Project::count(), 'increase' => 'Ongoing', 'trend' => 'neutral', 'icon' => 'briefcase'],
+        ];
+
+        $this->recentActivities = User::latest()->take(4)->get()->map(function($user) {
+            return [
+                'user' => $user->name, 
+                'email' => $user->email, 
+                'action' => 'Registered', 
+                'target' => 'System', 
+                'time' => $user->created_at->diffForHumans(), 
+                'status' => 'Success'
+            ];
+        })->toArray();
+    }
 };
 ?>
 
