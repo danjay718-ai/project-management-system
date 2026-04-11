@@ -1,7 +1,8 @@
 import './bootstrap';
 
-import Alpine from 'alpinejs';
+// Note: Alpine.js is managed by Livewire 4 — do NOT call Alpine.start() manually.
+// If you need to register Alpine plugins or custom data, use:
+// import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
+// Alpine.plugin(YourPlugin);
+// Livewire.start();
 
-window.Alpine = Alpine;
-
-Alpine.start();
