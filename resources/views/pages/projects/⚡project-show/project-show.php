@@ -48,7 +48,7 @@ new #[Layout('layouts.app')] class extends Component
     // ── Task Form Fields ──────────────────────────────────────────────────────
     public string $taskTitle = '';
     public string $taskDescription = '';
-    public string $taskStatus = 'not started';
+    public string $taskStatus = 'not_started';
     public ?int $taskAssignedTo = null;
     public ?string $taskDueDate = null;
 
@@ -115,7 +115,7 @@ new #[Layout('layouts.app')] class extends Component
     public function kanbanTasks(): array
     {
         $tasks = $this->tasks;
-        $statuses = ['not started', 'in progress', 'on review', 'done'];
+        $statuses = ['not_started', 'in_progress', 'review', 'completed'];
         
         $grouped = [];
         foreach ($statuses as $status) {
@@ -190,7 +190,7 @@ new #[Layout('layouts.app')] class extends Component
         $rules = [
             'taskTitle'       => ['required', 'string', 'max:255'],
             'taskDescription' => ['nullable', 'string', 'max:1000'],
-            'taskStatus'      => ['required', Rule::in(['not started', 'in progress', 'on review', 'done'])],
+            'taskStatus'      => ['required', Rule::in(['not_started', 'in_progress', 'review', 'completed'])],
             'taskAssignedTo'  => ['nullable', 'exists:users,id'],
             'taskDueDate'     => ['nullable', 'date'],
         ];
@@ -231,7 +231,7 @@ new #[Layout('layouts.app')] class extends Component
         $task = Task::findOrFail($taskId);
         Gate::authorize('update', $task);
         
-        if (!in_array($status, ['not started', 'in progress', 'on review', 'done'])) {
+        if (!in_array($status, ['not_started', 'in_progress', 'review', 'completed'])) {
             return;
         }
 
@@ -266,7 +266,7 @@ new #[Layout('layouts.app')] class extends Component
         $this->editingTaskId   = null;
         $this->taskTitle       = '';
         $this->taskDescription = '';
-        $this->taskStatus      = 'not started';
+        $this->taskStatus      = 'not_started';
         $this->taskAssignedTo  = null;
         $this->taskDueDate     = null;
         $this->resetValidation();

@@ -1,1 +1,34 @@
 @import "tailwindcss";
+
+/* ── Kanban Drag & Drop ───────────────────────────────────────────────── */
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Card being dragged */
+.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+    cursor: grabbing !important;
+}
+
+/* Column drop-target highlight */
+.drag-over {
+    background-color: rgb(238 242 255) !important; /* indigo-50 */
+    border-color: rgb(165 180 252) !important;     /* indigo-300 */
+    box-shadow: inset 0 0 0 2px rgb(199 210 254);  /* indigo-200 */
+}
+
+/* Kanban card grab cursor */
+.kanban-card {
+    cursor: grab;
+}
+.kanban-card:active {
+    cursor: grabbing;
+}
