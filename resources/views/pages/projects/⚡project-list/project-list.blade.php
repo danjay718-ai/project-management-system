@@ -27,6 +27,12 @@
             <h2 class="text-2xl font-bold text-slate-800">Projects</h2>
             <p class="mt-1 text-sm text-slate-500">Manage all your team projects in one place.</p>
         </div>
+
+        {{--
+            Only Admin and Manager satisfy ProjectPolicy::create.
+            The $this->canCreate computed property mirrors Gate::allows('create', Project::class).
+        --}}
+        @if($this->canCreate)
         <button
             wire:click="openCreate"
             id="btn-create-project"
@@ -37,6 +43,7 @@
             </svg>
             New Project
         </button>
+        @endif
     </div>
 
     {{-- ── Stat Cards ───────────────────────────────────────────────────────── --}}
@@ -152,6 +159,13 @@
                         </td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                                {{--
+                                    Edit button: visible when ProjectPolicy::update passes.
+                                    - Admin can edit any project.
+                                    - Manager can edit only projects they own.
+                                --}}
+                                @can('update', $project)
                                 <button
                                     wire:click="openEdit({{ $project->id }})"
                                     id="btn-edit-project-{{ $project->id }}"
@@ -162,6 +176,13 @@
                                     </svg>
                                     Edit
                                 </button>
+                                @endcan
+
+                                {{--
+                                    Delete button: visible only when ProjectPolicy::delete passes.
+                                    - Admin only.
+                                --}}
+                                @can('delete', $project)
                                 <button
                                     wire:click="confirmDelete({{ $project->id }})"
                                     id="btn-delete-project-{{ $project->id }}"
@@ -172,6 +193,8 @@
                                     </svg>
                                     Delete
                                 </button>
+                                @endcan
+
                             </div>
                         </td>
                     </tr>
