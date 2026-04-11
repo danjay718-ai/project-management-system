@@ -19,6 +19,7 @@ Route::middleware('auth')->group(function () {
 
     // Projects
     Route::livewire('/project/list', 'pages::projects.project-list')->name('project.list');
+    Route::livewire('/project/{project}', 'pages::projects.project-show')->name('project.show');
 });
 
 require __DIR__.'/auth.php';

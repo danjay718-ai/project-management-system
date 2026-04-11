@@ -125,7 +125,9 @@
                     <tr class="hover:bg-slate-50/60 transition-colors group">
                         <td class="px-6 py-4">
                             <div>
-                                <p class="font-semibold text-slate-800">{{ $project->name }}</p>
+                                <a href="{{ route('project.show', $project) }}" wire:navigate class="font-semibold text-slate-800 hover:text-indigo-600 transition-colors">
+                                    {{ $project->name }}
+                                </a>
                                 @if($project->description)
                                     <p class="text-xs text-slate-400 mt-0.5 max-w-xs truncate">{{ $project->description }}</p>
                                 @endif
