@@ -17,6 +17,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Users
+    Route::livewire('/user/list', 'pages::users.user-list')->name('user.list');
+
     // Projects
     Route::livewire('/project/list', 'pages::projects.project-list')->name('project.list');
     Route::livewire('/project/{project}', 'pages::projects.project-show')->name('project.show');
