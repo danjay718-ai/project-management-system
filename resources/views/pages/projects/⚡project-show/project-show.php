@@ -7,6 +7,7 @@ use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -48,7 +49,7 @@ new #[Layout('layouts.app')] class extends Component
     // ── Task Form Fields ──────────────────────────────────────────────────────
     public string $taskTitle = '';
     public string $taskDescription = '';
-    public string $taskStatus = 'not_started';
+    public ?int $taskStatusId = null;
     public ?int $taskAssignedTo = null;
     public ?string $taskDueDate = null;
 
@@ -65,8 +66,9 @@ new #[Layout('layouts.app')] class extends Component
         $this->project = $project;
         Gate::authorize('view', $this->project);
         
-        // Default to board view if there are many tasks?
-        // No, keep 'table' as default for now.
+        // Set default status to the first one in the lookup table
+        $defaultStatus = TaskStatus::orderBy('position')->first();
+        $this->taskStatusId = $defaultStatus?->id;
     }
 
     /**
@@ -89,6 +91,15 @@ new #[Layout('layouts.app')] class extends Component
     }
 
     /**
+     * Return all task statuses from the lookup table, ordered by position.
+     */
+    #[Computed]
+    public function statuses()
+    {
+        return TaskStatus::orderBy('position')->get();
+    }
+
+    /**
      * Returns the tasks for the project.
      * When in Kanban view, we load all tasks for status grouping.
      * When in Table view, we paginate.
@@ -97,9 +108,9 @@ new #[Layout('layouts.app')] class extends Component
     public function tasks()
     {
         $query = $this->project->tasks()
-            ->with(['assignee', 'creator'])
+            ->with(['assignee', 'creator', 'taskStatus'])
             ->when($this->taskSearch, fn($q) => $q->where('title', 'like', "%{$this->taskSearch}%"))
-            ->when($this->taskStatusFilter, fn($q) => $q->where('status', $this->taskStatusFilter));
+            ->when($this->taskStatusFilter, fn($q) => $q->where('task_status_id', $this->taskStatusFilter));
 
         if ($this->taskView === 'kanban') {
             return $query->latest()->get();
@@ -110,16 +121,17 @@ new #[Layout('layouts.app')] class extends Component
 
     /**
      * Group tasks by status for the Kanban board.
+     * Uses dynamic statuses from the lookup table.
      */
     #[Computed]
     public function kanbanTasks(): array
     {
         $tasks = $this->tasks;
-        $statuses = ['not_started', 'in_progress', 'review', 'completed'];
+        $statuses = $this->statuses;
         
         $grouped = [];
         foreach ($statuses as $status) {
-            $grouped[$status] = $tasks->where('status', $status);
+            $grouped[$status->id] = $tasks->where('task_status_id', $status->id);
         }
         
         return $grouped;
@@ -151,14 +163,21 @@ new #[Layout('layouts.app')] class extends Component
 
     /**
      * Return task counts for stats.
+     * Uses the 'completed' status from the lookup table.
      */
     #[Computed]
     public function taskStats(): array
     {
+        $completedStatus = TaskStatus::where('name', 'completed')->first();
+
         return [
             'total'       => $this->project->tasks()->count(),
-            'pending'     => $this->project->tasks()->where('status', '!=', 'done')->count(),
-            'completed'   => $this->project->tasks()->where('status', 'done')->count(),
+            'pending'     => $completedStatus
+                ? $this->project->tasks()->where('task_status_id', '!=', $completedStatus->id)->count()
+                : $this->project->tasks()->count(),
+            'completed'   => $completedStatus
+                ? $this->project->tasks()->where('task_status_id', $completedStatus->id)->count()
+                : 0,
         ];
     }
 
@@ -179,7 +198,7 @@ new #[Layout('layouts.app')] class extends Component
         $this->editingTaskId   = $id;
         $this->taskTitle       = $task->title;
         $this->taskDescription = $task->description ?? '';
-        $this->taskStatus      = $task->status;
+        $this->taskStatusId    = $task->task_status_id;
         $this->taskAssignedTo  = $task->assigned_to;
         $this->taskDueDate     = $task->due_date ? $task->due_date->format('Y-m-d') : null;
         $this->showTaskModal   = true;
@@ -187,10 +206,12 @@ new #[Layout('layouts.app')] class extends Component
 
     public function saveTask(): void
     {
+        $validStatusIds = TaskStatus::pluck('id')->toArray();
+
         $rules = [
             'taskTitle'       => ['required', 'string', 'max:255'],
             'taskDescription' => ['nullable', 'string', 'max:1000'],
-            'taskStatus'      => ['required', Rule::in(['not_started', 'in_progress', 'review', 'completed'])],
+            'taskStatusId'    => ['required', Rule::in($validStatusIds)],
             'taskAssignedTo'  => ['nullable', 'exists:users,id'],
             'taskDueDate'     => ['nullable', 'date'],
         ];
@@ -201,11 +222,11 @@ new #[Layout('layouts.app')] class extends Component
             $this->validate($rules);
 
             $task->update([
-                'title'       => $this->taskTitle,
-                'description' => $this->taskDescription,
-                'status'      => $this->taskStatus,
-                'assigned_to' => $this->taskAssignedTo,
-                'due_date'    => $this->taskDueDate,
+                'title'          => $this->taskTitle,
+                'description'    => $this->taskDescription,
+                'task_status_id' => $this->taskStatusId,
+                'assigned_to'    => $this->taskAssignedTo,
+                'due_date'       => $this->taskDueDate,
             ]);
             session()->flash('task-success', 'Task updated successfully.');
         } else {
@@ -213,12 +234,12 @@ new #[Layout('layouts.app')] class extends Component
             $this->validate($rules);
 
             $this->project->tasks()->create([
-                'title'       => $this->taskTitle,
-                'description' => $this->taskDescription,
-                'status'      => $this->taskStatus,
-                'assigned_to' => $this->taskAssignedTo,
-                'due_date'    => $this->taskDueDate,
-                'created_by'  => auth()->id(),
+                'title'          => $this->taskTitle,
+                'description'    => $this->taskDescription,
+                'task_status_id' => $this->taskStatusId,
+                'assigned_to'    => $this->taskAssignedTo,
+                'due_date'       => $this->taskDueDate,
+                'created_by'     => auth()->id(),
             ]);
             session()->flash('task-success', 'Task created successfully.');
         }
@@ -226,17 +247,19 @@ new #[Layout('layouts.app')] class extends Component
         $this->closeTaskModal();
     }
 
-    public function updateTaskStatus(int $taskId, string $status): void
+    public function updateTaskStatus(int $taskId, int $statusId): void
     {
         $task = Task::findOrFail($taskId);
         Gate::authorize('update', $task);
         
-        if (!in_array($status, ['not_started', 'in_progress', 'review', 'completed'])) {
+        // Validate that the status ID exists in the lookup table
+        $status = TaskStatus::find($statusId);
+        if (!$status) {
             return;
         }
 
-        $task->update(['status' => $status]);
-        session()->flash('task-success', "Task status updated to {$status}.");
+        $task->update(['task_status_id' => $statusId]);
+        session()->flash('task-success', "Task status updated to {$status->label}.");
     }
 
     public function confirmTaskDelete(int $id): void
@@ -266,10 +289,13 @@ new #[Layout('layouts.app')] class extends Component
         $this->editingTaskId   = null;
         $this->taskTitle       = '';
         $this->taskDescription = '';
-        $this->taskStatus      = 'not_started';
         $this->taskAssignedTo  = null;
         $this->taskDueDate     = null;
         $this->resetValidation();
+
+        // Reset to the first status in the lookup table
+        $defaultStatus = TaskStatus::orderBy('position')->first();
+        $this->taskStatusId = $defaultStatus?->id;
     }
 
     public function closeTaskModal(): void

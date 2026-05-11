@@ -10,10 +10,23 @@ class Task extends Model
         'project_id',
         'title',
         'description',
-        'status',
+        'task_status_id',
         'assigned_to',
         'created_by',
+        'due_date',
     ];
+
+    protected $casts = [
+        'due_date' => 'date',
+    ];
+
+    /**
+     * Get the status of the task.
+     */
+    public function taskStatus()
+    {
+        return $this->belongsTo(TaskStatus::class);
+    }
 
     public function project()
     {

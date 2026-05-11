@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Task;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\TaskStatus;
 
 class TaskSeeder extends Seeder
 {
@@ -20,16 +21,24 @@ class TaskSeeder extends Seeder
             return;
         }
 
+        // Look up status IDs from the task_statuses table
+        $notStarted = TaskStatus::where('name', 'not_started')->first();
+        $inProgress = TaskStatus::where('name', 'in_progress')->first();
+
+        if (! $notStarted || ! $inProgress) {
+            return;
+        }
+
         $tasks = [
             [
                 'title' => 'Design database schema',
                 'description' => 'Create project and task migrations',
-                'status' => 'pending',
+                'task_status_id' => $notStarted->id,
             ],
             [
                 'title' => 'Implement RBAC policies',
                 'description' => 'Task and project authorization',
-                'status' => 'in_progress',
+                'task_status_id' => $inProgress->id,
             ],
         ];
 
@@ -41,7 +50,7 @@ class TaskSeeder extends Seeder
                 ],
                 [
                     'description' => $task['description'],
-                    'status'       => $task['status'],
+                    'task_status_id' => $task['task_status_id'],
                     'assigned_to'  => $member->id,
                     'created_by'   => $manager->id,
                 ]

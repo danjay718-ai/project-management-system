@@ -180,15 +180,14 @@
                            class="w-full pl-9 pr-4 py-2 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none transition-all">
                 </div>
 
-                {{-- Status Filter --}}
+                {{-- Status Filter (Dynamic from DB) --}}
                 <select wire:model.live="taskStatusFilter"
                         id="filter-task-status"
                         class="text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none transition-all">
                     <option value="">All Statuses</option>
-                    <option value="not_started">Not Started</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="review">Review</option>
-                    <option value="completed">Completed</option>
+                    @foreach($this->statuses as $statusOption)
+                        <option value="{{ $statusOption->id }}">{{ $statusOption->label }}</option>
+                    @endforeach
                 </select>
             </div>
         </div>
@@ -227,18 +226,16 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            @php
-                                $tStyle = match($task->status) {
-                                    'not_started' => 'bg-slate-100 text-slate-600',
-                                    'in_progress' => 'bg-blue-100 text-blue-700',
-                                    'review'      => 'bg-amber-100 text-amber-700',
-                                    'completed'   => 'bg-emerald-100 text-emerald-700',
-                                    default       => 'bg-slate-100 text-slate-600',
-                                };
-                            @endphp
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $tStyle }} capitalize">
-                                {{ str_replace('_', ' ', $task->status) }}
-                            </span>
+                            {{-- Dynamic status badge using color from the lookup table --}}
+                            @if($task->taskStatus)
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-{{ $task->taskStatus->color }}-100 text-{{ $task->taskStatus->color }}-700 capitalize">
+                                    {{ $task->taskStatus->label }}
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+                                    Unknown
+                                </span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 text-slate-400 text-xs">
                             {{ $task->due_date ? $task->due_date->format('M d, Y') : '—' }}
@@ -289,41 +286,36 @@
         @endif
     </div>
 
-    {{-- ── Board View ── Kanban with Drag & Drop ─────────────────────────── --}}
+    {{-- ── Board View ── Kanban with Drag & Drop (Dynamic Columns) ───────── --}}
     <div x-show="tab === 'kanban'" x-transition class="w-full">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-start">
-            @foreach([
-                'not_started' => ['title' => 'Not Started', 'color' => 'slate',   'dot' => 'bg-slate-400'],
-                'in_progress' => ['title' => 'In Progress', 'color' => 'blue',    'dot' => 'bg-blue-500'],
-                'review'      => ['title' => 'Review',      'color' => 'amber',   'dot' => 'bg-amber-500'],
-                'completed'   => ['title' => 'Completed',   'color' => 'emerald', 'dot' => 'bg-emerald-500']
-            ] as $status => $meta)
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-{{ min(count($this->statuses), 4) }} gap-5 items-start">
+            @foreach($this->statuses as $status)
             <div class="flex flex-col bg-slate-50/80 rounded-2xl border border-slate-200/60 min-h-[420px] transition-all"
-                 x-on:dragover.prevent="dragOverStatus = '{{ $status }}'"
+                 x-on:dragover.prevent="dragOverStatus = {{ $status->id }}"
                  x-on:dragleave="dragOverStatus = null"
                  x-on:drop.prevent="
                      if (dragTaskId) {
-                         $wire.updateTaskStatus(dragTaskId, '{{ $status }}');
+                         $wire.updateTaskStatus(dragTaskId, {{ $status->id }});
                          dragTaskId = null;
                          dragOverStatus = null;
                      }
                  "
-                 :class="dragOverStatus === '{{ $status }}' ? 'drag-over' : ''">
+                 :class="dragOverStatus === {{ $status->id }} ? 'drag-over' : ''">
 
                 {{-- Column Header --}}
                 <div class="flex items-center justify-between px-4 py-3.5 border-b border-slate-200/60">
                     <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full {{ $meta['dot'] }}"></span>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">{{ $meta['title'] }}</h3>
+                        <span class="w-2.5 h-2.5 rounded-full bg-{{ $status->color }}-500"></span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">{{ $status->label }}</h3>
                     </div>
                     <span class="flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 bg-white rounded-md text-xs font-bold text-slate-500 border border-slate-200 shadow-sm">
-                        {{ $this->kanbanTasks[$status]->count() }}
+                        {{ $this->kanbanTasks[$status->id]->count() }}
                     </span>
                 </div>
 
                 {{-- Cards Container --}}
                 <div class="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-hide">
-                    @foreach($this->kanbanTasks[$status] as $task)
+                    @foreach($this->kanbanTasks[$status->id] as $task)
                     <div class="kanban-card bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group/card"
                          draggable="true"
                          x-on:dragstart="dragTaskId = {{ $task->id }}; $event.target.classList.add('dragging')"
@@ -339,17 +331,17 @@
                             {{-- Quick move arrows --}}
                             <div class="flex gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity shrink-0">
                                 @php
-                                    $allStatuses = ['not_started', 'in_progress', 'review', 'completed'];
-                                    $currentIndex = array_search($status, $allStatuses);
+                                    $statusList = $this->statuses;
+                                    $currentIndex = $statusList->search(fn($s) => $s->id === $status->id);
                                 @endphp
                                 @if($currentIndex > 0)
-                                    <button wire:click="updateTaskStatus({{ $task->id }}, '{{ $allStatuses[$currentIndex - 1] }}')"
+                                    <button wire:click="updateTaskStatus({{ $task->id }}, {{ $statusList[$currentIndex - 1]->id }})"
                                             class="p-1 rounded-md text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Move left">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                                     </button>
                                 @endif
-                                @if($currentIndex < 3)
-                                    <button wire:click="updateTaskStatus({{ $task->id }}, '{{ $allStatuses[$currentIndex + 1] }}')"
+                                @if($currentIndex < $statusList->count() - 1)
+                                    <button wire:click="updateTaskStatus({{ $task->id }}, {{ $statusList[$currentIndex + 1]->id }})"
                                             class="p-1 rounded-md text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Move right">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                                     </button>
@@ -589,25 +581,20 @@
                     </div>
                 </div>
 
-                {{-- Status --}}
+                {{-- Status (Dynamic from DB) --}}
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">
                         Status <span class="text-rose-500">*</span>
                     </label>
                     <div class="grid grid-cols-2 gap-3">
-                        @foreach([
-                            'not_started' => ['label' => 'Not Started', 'color' => 'slate'],
-                            'in_progress' => ['label' => 'In Progress', 'color' => 'blue'],
-                            'review'      => ['label' => 'Review',      'color' => 'amber'],
-                            'completed'   => ['label' => 'Completed',   'color' => 'emerald']
-                        ] as $statusVal => $info)
-                            <label for="status-{{ $statusVal }}"
+                        @foreach($this->statuses as $statusOption)
+                            <label for="status-{{ $statusOption->id }}"
                                    class="relative flex cursor-pointer items-center gap-2.5 rounded-xl border-2 p-3 transition-all
-                                       {{ $taskStatus === $statusVal ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300' }}">
-                                <input wire:model.live="taskStatus" type="radio" id="status-{{ $statusVal }}" name="taskStatus" value="{{ $statusVal }}" class="sr-only">
-                                <span class="w-2.5 h-2.5 rounded-full bg-{{ $info['color'] }}-400"></span>
-                                <span class="text-xs font-semibold text-slate-700">{{ $info['label'] }}</span>
-                                @if($taskStatus === $statusVal)
+                                       {{ $taskStatusId == $statusOption->id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300' }}">
+                                <input wire:model.live="taskStatusId" type="radio" id="status-{{ $statusOption->id }}" name="taskStatusId" value="{{ $statusOption->id }}" class="sr-only">
+                                <span class="w-2.5 h-2.5 rounded-full bg-{{ $statusOption->color }}-400"></span>
+                                <span class="text-xs font-semibold text-slate-700">{{ $statusOption->label }}</span>
+                                @if($taskStatusId == $statusOption->id)
                                     <svg class="w-4 h-4 text-indigo-600 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                                 @endif
                             </label>
